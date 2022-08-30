@@ -1,24 +1,39 @@
-import logo from './logo.svg';
 import './App.css';
+import React, { useEffect } from 'react';
+import Main from "./Components/Main/Main";
+import { initializeApp } from "firebase/app";
+import { activate, fetchAndActivate, fetchConfig, getRemoteConfig, getValue } from "firebase/remote-config";
+
+const firebaseConfig = {
+  //add the firebase config here
+};
+
+
 
 function App() {
+  const [greet, setGreet] = React.useState("");
+  
+  const app = initializeApp(firebaseConfig);
+  const remoteConfig = getRemoteConfig(app);
+  remoteConfig.settings.minimumFetchIntervalMillis = 0;
+  // setGreet(getValue("greet").asString());
+  
+  useEffect(() => {
+      let greeting = '';
+      fetchAndActivate(remoteConfig)
+        .then(() => {
+          greeting = getValue(remoteConfig, 'greet');
+          setGreet(greeting._value);
+        })
+        .catch((err) => {
+          console.log("Failed to fetch remote config", err);
+        });
+  }, []);
+  
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <Main greet={ greet } />
+    </>
   );
 }
 
